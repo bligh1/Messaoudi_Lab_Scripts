@@ -19,8 +19,8 @@ done
 ##################################################################
 # Step 2 Input argument checks
 
-if [[ "$file" == "" || "$length" == "" || "$ends" == "" ]]; then
-	echo "ERROR: Options -f -l -e  require arguments." >&2
+if [[ "$file" == "" ]]; then
+	echo "ERROR: Option -f requires arguments." >&2
 	exit 1
 fi
 
@@ -29,11 +29,15 @@ if [[ "$quality" == "" ]]; then
 	echo "No input for -q; quality set to 20"
 fi 
 
-
+if [[ "$length" == "" ]]; then
+	length=35
+	echo "No input for -l; length set to 35"
+fi
 ##################################################################
 # Step 3 Load necessary modules and create remaining variables
 
-module load fastqc/0.11.3 
+module load fastqc/0.11.3
+module load fastqc 
 module load trim_galore/0.4.1
 
 out=$(dirname $file)
@@ -41,6 +45,11 @@ out=$(dirname $file)
 
 ##################################################################
 # Step 4 Submit job to cluster
+if [["$ends" == "" ]]; then
+	sbatch -p highmem --mem=100g --time=15:00:00 --wrap "trim_galore --fastqc --gzip --length $length -o $out -q $quality  $file"
+	exit 1
+fi
+
 
 sbatch -p highmem --mem=100g --time=15:00:00 --wrap "trim_galore --fastqc --gzip --clip_R1 $ends --three_prime_clip_R1 $ends --length $length -o $out -q $quality  $file"
 
